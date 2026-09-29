@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Secrets - never commit these
+.env
+.env.local
+.env.*.local
+
+# Your personal data: recruiters, schedules, sent log, parsed profile, job results.
+# The skill dictionary is shared, so it stays tracked.
+data/*.json
+!data/skills.json
+
+# Your uploaded resume
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp

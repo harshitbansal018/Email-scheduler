@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Scheduler</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>📧 Recruiter Email Scheduler</h1>
+    <div id="status" class="status"></div>
+  </header>
+
+  <main>
+    <!-- ================= RESUME ================= -->
+    <section class="card">
+      <h2>1. Resume &amp; Skills</h2>
+      <div class="row">
+        <input type="file" id="resumeFile" accept=".pdf,.txt" />
+        <button id="uploadResume">Upload resume</button>
+        <span id="resumeInfo" class="muted"></span>
+      </div>
+      <p class="muted">Skills are detected automatically from your resume. You can edit the list below (comma-separated) — this is what gets matched against recruiters.</p>
+      <textarea id="skills" rows="3" placeholder="JavaScript, React, Node.js, ..."></textarea>
+      <div class="row">
+        <button id="saveSkills">Save skills</button>
+        <button id="resetSkills" class="secondary">Reset to detected</button>
+        <span id="skillsInfo" class="muted"></span>
+      </div>
+    </section>
+
+    <!-- ================= DISCOVERY ================= -->
+    <section class="card">
+      <h2>2. Find jobs &amp; recruiters globally</h2>
+      <p class="muted">Searches public job boards worldwide, reads each job description, and ranks the jobs by how well they match your resume. Free — no API key needed for this part.</p>
+      <form id="searchForm" class="grid">
+        <label>Role keywords
+          <input name="query" placeholder="e.g. node.js, full stack, developer" />
+        </label>
+        <label>Location
+          <input name="location" value="india, remote" placeholder="india, remote" />
+          <small class="muted">Presets: <code>india</code> (all Indian cities &amp; states), <code>remote</code>. Or type any city/country. Comma = OR.</small>
+        </label>
+        <label>Min matching skills
+          <input name="minMatch" type="number" min="0" value="3" />
+        </label>
+        <label>Your experience (years)
+          <input name="myYears" type="number" min="0" max="40" placeholder="e.g. 2" />
+          <small class="muted">Hides jobs asking for much more than this. Blank = no limit.</small>
+        </label>
+        <label class="span2">Experience level
+          <select name="levels" multiple size="6"></select>
+          <small class="muted">Leave none selected for any level. Ctrl+click to pick several.</small>
+        </label>
+        <label class="check span2">
+          <input name="eligibleFrom" type="checkbox" checked />
+          Only remote jobs that hire from India
+          <small class="muted">&nbsp;— drops remote roles restricted to e.g. "USA, Canada only"</small>
+        </label>
+        <input name="companies" class="span2" placeholder="Optional: company job boards to also scan e.g. stripe, spotify" />
+        <button type="submit" id="searchBtn">Search jobs</button>
+      </form>
+      <div id="searchInfo" class="muted"></div>
+
+      <div id="jobResults" class="hidden">
+        <div class="row">
+          <button id="selectAllJobs" class="secondary small">Select all</button>
+          <button id="selectNoneJobs" class="secondary small">Select none</button>
+          <label class="inline">Contacts per company
+            <input id="perCompany" type="number" min="1" max="5" value="2" class="narrow" />
+          </label>
+          <label class="inline"><input id="recruitersOnly" type="checkbox" checked /> Only HR / recruiter titles</label>
+        </div>
+        <div class="row">
+          <button id="findEmails">Find recruiter emails for selected</button>
+          <span id="hunterInfo" class="muted"></span>
+        </div>
+        <p class="muted">⚠️ This step spends Hunter credits — one lookup per company, not per job.</p>
+        <table id="jobTable">
+          <thead>
+            <tr><th></th><th>Role</th><th>Company</th><th>Location</th><th>Experience</th><th>Match</th><th>Your matching skills</th><th>Source</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= RECRUITERS ================= -->
+    <section class="card">
+      <h2>3. Recruiters</h2>
+      <form id="recruiterForm" class="grid">
+        <input name="name" placeholder="Recruiter name" />
+        <input name="email" placeholder="Email *" type="email" required />
+        <input name="company" placeholder="Company" />
+        <input name="role" placeholder="Role / Position" />
+        <input name="skills" placeholder="Required skills (comma-separated)" class="span2" />
+        <button type="submit">Add recruiter</button>
+      </form>
+
+      <details>
+        <summary>Bulk import (one per line)</summary>
+        <p class="muted">Format: <code>Name | email | Company | Role | skill1, skill2, skill3</code></p>
+        <textarea id="bulk" rows="5" placeholder="Priya Sharma | priya@acme.com | Acme Corp | Frontend Developer | React, JavaScript, CSS"></textarea>
+        <button id="bulkImport">Import</button>
+      </details>
+
+      <table id="recruiterTable">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Company</th><th>Role</th><th>Required skills</th><th>Match</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="recruiterEmpty" class="muted">No recruiters yet.</p>
+    </section>
+
+    <!-- ================= TEMPLATE ================= -->
+    <section class="card">
+      <h2>4. Email template</h2>
+      <p class="muted">Placeholders:
+        <code>{{recruiterName}}</code> <code>{{company}}</code> <code>{{role}}</code>
+        <code>{{matchedSkills}}</code> <code>{{allSkills}}</code>
+        <code>{{myName}}</code> <code>{{myPhone}}</code> <code>{{myLinkedin}}</code> <code>{{myEmail}}</code>
+      </p>
+      <input id="tplSubject" placeholder="Subject" />
+      <textarea id="tplBody" rows="12"></textarea>
+      <div class="row">
+        <button id="saveTemplate">Save template</button>
+        <button id="resetTemplate" class="secondary">Reset to default</button>
+        <button id="testEmail" class="secondary">Send test email to me</button>
+        <span id="tplInfo" class="muted"></span>
+      </div>
+    </section>
+
+    <!-- ================= SCHEDULES ================= -->
+    <section class="card">
+      <h2>5. Schedules</h2>
+      <form id="scheduleForm" class="grid">
+        <input name="name" placeholder="Schedule name (e.g. Morning batch)" />
+        <input name="runAt" type="datetime-local" required />
+        <select name="repeat">
+          <option value="once">Send once</option>
+          <option value="daily">Repeat daily at this time</option>
+          <option value="weekly">Repeat weekly on this day</option>
+        </select>
+        <label>Min matching skills
+          <input name="minMatch" type="number" min="0" value="1" />
+        </label>
+        <label>Max emails per run
+          <input name="maxPerRun" type="number" min="1" value="50" />
+        </label>
+        <label class="check">
+          <input name="skipContacted" type="checkbox" checked /> Skip recruiters already emailed
+        </label>
+        <label class="span2">Recruiters
+          <select name="recruiterIds" multiple size="4"></select>
+          <small class="muted">Leave none selected to include all recruiters. Ctrl+click to pick specific ones.</small>
+        </label>
+        <button type="submit">Add schedule</button>
+      </form>
+
+      <table id="scheduleTable">
+        <thead>
+          <tr><th>Name</th><th>When</th><th>Repeat</th><th>Filter</th><th>Status</th><th>Next run</th><th>Sent</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="scheduleEmpty" class="muted">No schedules yet.</p>
+    </section>
+
+    <!-- ================= LOGS ================= -->
+    <section class="card">
+      <h2>6. Sent log</h2>
+      <div class="row">
+        <button id="refreshLogs" class="secondary">Refresh</button>
+        <button id="clearLogs" class="secondary danger">Clear log</button>
+      </div>
+      <table id="logTable">
+        <thead>
+          <tr><th>Time</th><th>Schedule</th><th>Recruiter</th><th>Company</th><th>Matched</th><th>Status</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="logEmpty" class="muted">Nothing sent yet.</p>
+    </section>
+  </main>
+
+  <!-- Modal for previews / plans -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <strong id="modalTitle"></strong>
+        <button id="modalClose" class="secondary">✕</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
